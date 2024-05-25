@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Image Classification Tool</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      background-color: #e8f1f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      margin: 20px;
+      padding: 30px;
+      background-color: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.5s ease;
+    }
+
+    .container:hover {
+      transform: translateY(-10px);
+    }
+
+    h1 {
+      color: #0069d9;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    #imageInput {
+      display: none;
+    }
+
+    label {
+      display: inline-block;
+      padding: 15px 30px;
+      background-color: #0069d9;
+      color: #ffffff;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    label:hover {
+      background-color: #0056b3;
+    }
+
+    img {
+      display: none;
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 2px solid #0069d9;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #result {
+      font-size: 18px;
+      color: #333;
+    }
+
+    .result-item {
+      margin: 10px 0;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: background-color 0.3s ease;
+    }
+
+    .result-item:hover {
+      background-color: #f1f1f1;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      text-align: left;
+      margin: 10px 0;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Image Classification Tool</h1>
+
+    <p>This tool uses advanced AI technology to classify images. Upload an image to find out what it contains.</p>
+
+    <p>How to use:</p>
+
+    <ul>
+
+      <li>Click on the "Select an Image" button below.</li>
+
+      <li>Choose an image file from your device.</li>
+
+      <li>Wait for the image to load and the AI to classify it.</li>
+
+      <li>See the classification results below the image.</li>
+
+    </ul>
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <label for="imageInput">Select an Image</label>
+
+    <img id="selectedImage" src="#" alt="Selected Image">
+
+    <div id="result"></div>
+
+  </div>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const selectedImage = document.getElementById('selectedImage');
+    const resultDiv = document.getElementById('result');
+    imageInput.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        selectedImage.src = e.target.result;
+        selectedImage.style.display = 'block';
+        classifyImage(selectedImage);
+      }
+      reader.readAsDataURL(file);
+    });
+    async function classifyImage(image) {
+      resultDiv.innerHTML = 'Classifying...';
+      const mobilenetModel = await mobilenet.load();
+      const predictions = await mobilenetModel.classify(image);
+      resultDiv.innerHTML = '';
+      predictions.forEach(prediction => {
+        resultDiv.innerHTML += `
+
+                    <div class="result-item">
+
+                        <strong>${prediction.className.toUpperCase()}</strong>: ${Math.round(prediction.probability * 100)}%
+
+                    </div>`;
+      });
+    }
+  </script>
+
+</body>
+
+</html>
