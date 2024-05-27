@@ -1,19 +1,12 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Image Classification Tool</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-
   <style>
     body {
       font-family: 'Roboto', sans-serif;
@@ -24,6 +17,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100vh;
     }
 
     .container {
@@ -111,73 +105,119 @@
       text-align: left;
       margin: 10px 0;
     }
-  </style>
 
+    .progress {
+      display: none;
+      margin: 20px 0;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 20px;
+      background-color: #0069d9;
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+
+    .clear-button {
+      display: none;
+      padding: 10px 20px;
+      background-color: #dc3545;
+      color: #ffffff;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .clear-button:hover {
+      background-color: #c82333;
+    }
+  </style>
 </head>
 
 <body>
-
   <div class="container">
-
     <h1>Image Classification Tool</h1>
-
     <p>This tool uses advanced AI technology to classify images. Upload an image to find out what it contains.</p>
-
     <p>How to use:</p>
-
     <ul>
-
       <li>Click on the "Select an Image" button below.</li>
-
       <li>Choose an image file from your device.</li>
-
       <li>Wait for the image to load and the AI to classify it.</li>
-
       <li>See the classification results below the image.</li>
-
     </ul>
-
     <input type="file" id="imageInput" accept="image/*">
-
     <label for="imageInput">Select an Image</label>
-
     <img id="selectedImage" src="#" alt="Selected Image">
-
+    <div class="progress">
+      <div class="progress-bar"></div>
+    </div>
     <div id="result"></div>
-
+    <button class="clear-button" id="clearButton" onclick="clearResults()">Clear Results</button>
   </div>
-
   <script>
     const imageInput = document.getElementById('imageInput');
     const selectedImage = document.getElementById('selectedImage');
     const resultDiv = document.getElementById('result');
-    imageInput.addEventListener('change', function(event) {
+    const progressBar = document.querySelector('.progress-bar');
+    const progressContainer = document.querySelector('.progress');
+    const clearButton = document.getElementById('clearButton');
+
+    imageInput.addEventListener('change', function (event) {
       const file = event.target.files[0];
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = function (e) {
         selectedImage.src = e.target.result;
         selectedImage.style.display = 'block';
+        clearButton.style.display = 'none';
+        progressContainer.style.display = 'block';
+        progressBar.style.width = '0%';
+        animateProgressBar();
         classifyImage(selectedImage);
       }
       reader.readAsDataURL(file);
     });
+
+    function animateProgressBar() {
+      let width = 1;
+      const interval = setInterval(() => {
+        if (width >= 100) {
+          clearInterval(interval);
+        } else {
+          width++;
+          progressBar.style.width = width + '%';
+        }
+      }, 30);
+    }
+
     async function classifyImage(image) {
       resultDiv.innerHTML = 'Classifying...';
       const mobilenetModel = await mobilenet.load();
       const predictions = await mobilenetModel.classify(image);
       resultDiv.innerHTML = '';
+      progressBar.style.width = '100%';
+      progressContainer.style.display = 'none';
       predictions.forEach(prediction => {
         resultDiv.innerHTML += `
-
-                    <div class="result-item">
-
-                        <strong>${prediction.className.toUpperCase()}</strong>: ${Math.round(prediction.probability * 100)}%
-
-                    </div>`;
+          <div class="result-item">
+            <strong>${prediction.className.toUpperCase()}</strong>: ${Math.round(prediction.probability * 100)}%
+            <div style="background-color: #f0f0f0; border-radius: 5px; overflow: hidden; margin-top: 5px;">
+              <div style="width: ${Math.round(prediction.probability * 100)}%; background-color: #0069d9; height: 10px;"></div>
+            </div>
+          </div>`;
       });
+      clearButton.style.display = 'inline-block';
+    }
+
+    function clearResults() {
+      resultDiv.innerHTML = '';
+      selectedImage.style.display = 'none';
+      imageInput.value = '';
+      clearButton.style.display = 'none';
     }
   </script>
-
 </body>
 
-</html>
+  </html>
